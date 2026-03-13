@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hospital Revenue & Patient Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy:    #0B1F3A;
+    --navy2:   #0D2845;
+    --teal:    #0E8A8A;
+    --teal2:   #12B5B5;
+    --gold:    #E8A838;
+    --green:   #22C98A;
+    --red:     #F05252;
+    --purple:  #8B5CF6;
+    --slate:   #1E3A5F;
+    --border:  rgba(255,255,255,0.07);
+    --text:    #E2EBF5;
+    --muted:   #7A99BB;
+    --card:    rgba(13,40,69,0.85);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(14,138,138,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(139,92,246,0.05) 0%, transparent 50%);
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2rem;
+    background: rgba(11,31,58,0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    position: sticky; top:0; z-index:100;
+  }
+  .logo { display:flex; align-items:center; gap:.75rem; }
+  .logo-icon {
+    width:38px; height:38px; background: linear-gradient(135deg,var(--teal),var(--teal2));
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem;
+  }
+  .logo-text h1 { font-size:1.05rem; font-weight:700; letter-spacing:-.01em; }
+  .logo-text p  { font-size:.72rem; color:var(--muted); }
+  .header-right { display:flex; align-items:center; gap:1rem; }
+  .last-updated { font-size:.72rem; color:var(--muted); font-family:'DM Mono',monospace; }
+  .live-badge {
+    display:flex; align-items:center; gap:.4rem;
+    background: rgba(34,201,138,.12); border:1px solid rgba(34,201,138,.25);
+    color:var(--green); font-size:.7rem; font-weight:600;
+    padding:.25rem .7rem; border-radius:20px;
+  }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  /* ── NAV TABS ── */
+  nav {
+    display:flex; gap:.25rem; padding:.75rem 2rem;
+    background: rgba(11,31,58,0.6);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding:.45rem 1.1rem; border-radius:8px; font-size:.82rem;
+    font-weight:500; cursor:pointer; border:none;
+    background:transparent; color:var(--muted);
+    transition: all .2s;
+  }
+  .tab:hover { background:rgba(255,255,255,.05); color:var(--text); }
+  .tab.active { background:var(--teal); color:white; }
+
+  /* ── LAYOUT ── */
+  main { padding:1.5rem 2rem; }
+  .page { display:none; }
+  .page.active { display:block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;
+  }
+  .kpi-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:1.2rem 1.4rem;
+    position:relative; overflow:hidden;
+    transition:transform .2s, box-shadow .2s;
+  }
+  .kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+  .kpi-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background: var(--accent-color, var(--teal));
+  }
+  .kpi-label { font-size:.72rem; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.5rem; }
+  .kpi-value { font-size:1.9rem; font-weight:700; line-height:1; margin-bottom:.3rem; font-family:'DM Mono',monospace; }
+  .kpi-sub   { font-size:.72rem; color:var(--muted); }
+  .kpi-icon  { position:absolute; top:1rem; right:1rem; font-size:1.5rem; opacity:.25; }
+
+  /* ── CHART CARDS ── */
+  .chart-grid-2 { display:grid; grid-template-columns:1.6fr 1fr; gap:1rem; margin-bottom:1rem; }
+  .chart-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1rem; }
+  .chart-grid-equal { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+
+  .card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:1.3rem;
+  }
+  .card-title {
+    font-size:.82rem; font-weight:600; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.07em;
+    margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;
+  }
+  .card-title span { font-size:.9rem; }
+  .chart-wrap { position:relative; }
+
+  /* ── TABLE ── */
+  .data-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  .data-table th {
+    padding:.6rem .9rem; text-align:left;
+    font-size:.7rem; font-weight:600; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted);
+    border-bottom:1px solid var(--border);
+  }
+  .data-table td {
+    padding:.65rem .9rem; border-bottom:1px solid rgba(255,255,255,.04);
+  }
+  .data-table tr:hover td { background:rgba(255,255,255,.03); }
+  .badge {
+    display:inline-block; padding:.2rem .55rem; border-radius:5px;
+    font-size:.68rem; font-weight:600;
+  }
+  .badge-top   { background:rgba(34,201,138,.15); color:var(--green); }
+  .badge-mid   { background:rgba(232,168,56,.15);  color:var(--gold); }
+  .badge-low   { background:rgba(240,82,82,.15);   color:var(--red); }
+
+  /* ── HEATMAP ── */
+  .heatmap-grid { display:grid; gap:3px; }
+  .heatmap-cell {
+    height:36px; border-radius:5px; display:flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:600; transition:.2s;
+  }
+  .heatmap-header { font-size:.7rem; color:var(--muted); font-weight:600; text-align:center; }
+  .heatmap-row-label { font-size:.72rem; color:var(--muted); display:flex; align-items:center; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display:flex; align-items:center; gap:1rem;
+    padding:.75rem 1rem; background:rgba(255,255,255,.03);
+    border:1px solid var(--border); border-radius:10px;
+    margin-bottom:1.2rem;
+  }
+  .filter-bar label { font-size:.75rem; color:var(--muted); font-weight:500; }
+  .filter-bar select {
+    background:rgba(255,255,255,.06); border:1px solid var(--border);
+    color:var(--text); padding:.35rem .7rem; border-radius:6px;
+    font-size:.78rem; font-family:'DM Sans',sans-serif; cursor:pointer;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .prog-bar-wrap { margin-bottom:.8rem; }
+  .prog-bar-label { display:flex; justify-content:space-between; font-size:.75rem; margin-bottom:.3rem; }
+  .prog-bar-track { height:7px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; }
+  .prog-bar-fill  { height:100%; border-radius:4px; transition:width 1s ease; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align:center; padding:1.5rem; font-size:.72rem; color:var(--muted);
+    border-top:1px solid var(--border); margin-top:2rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏥</div>
+    <div class="logo-text">
+      <h1>Hospital Revenue & Patient Analytics</h1>
+      <p>Jan 2021 – Dec 2024 · 5,000 Admissions · 10 Departments · 50 Doctors</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="last-updated">Last updated: Dec 2024</span>
+    <span class="live-badge"><span class="live-dot"></span>LIVE DEMO</span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showPage('overview')">📊 Overview</button>
+  <button class="tab" onclick="showPage('departments')">🏨 Departments</button>
+  <button class="tab" onclick="showPage('patients')">👤 Patients</button>
+  <button class="tab" onclick="showPage('doctors')">👨‍⚕️ Doctors</button>
+  <button class="tab" onclick="showPage('readmission')">🔄 Readmission</button>
+</nav>
+
+<main>
+
+<!-- ════════ PAGE 1: OVERVIEW ════════ -->
+<div id="page-overview" class="page active">
+
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent-color:#0E8A8A">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" style="color:#12B5B5">₹17.64Cr</div>
+      <div class="kpi-sub">↑ 4-year cumulative</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#22C98A">
+      <div class="kpi-icon">🏥</div>
+      <div class="kpi-label">Total Admissions</div>
+      <div class="kpi-value" style="color:#22C98A">5,000</div>
+      <div class="kpi-sub">2,434 unique patients</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#E8A838">
+      <div class="kpi-icon">💳</div>
+      <div class="kpi-label">Avg Bill / Admission</div>
+      <div class="kpi-value" style="color:#E8A838">₹35,275</div>
+      <div class="kpi-sub">Avg LOS: 4.8 days</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#F05252">
+      <div class="kpi-icon">🔄</div>
+      <div class="kpi-label">30-Day Readmission</div>
+      <div class="kpi-value" style="color:#F05252">8.2%</div>
+      <div class="kpi-sub">Target: &lt;7.0%</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent-color:#8B5CF6">
+      <div class="kpi-icon">🛡️</div>
+      <div class="kpi-label">Insurance Coverage</div>
+      <div class="kpi-value" style="color:#8B5CF6">38.4%</div>
+      <div class="kpi-sub">Of total billing</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#22C98A">
+      <div class="kpi-icon">💚</div>
+      <div class="kpi-label">Recovery Rate</div>
+      <div class="kpi-value" style="color:#22C98A">63.8%</div>
+      <div class="kpi-sub">Full recovery on discharge</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#0E8A8A">
+      <div class="kpi-icon">👨‍⚕️</div>
+      <div class="kpi-label">Active Doctors</div>
+      <div class="kpi-value" style="color:#12B5B5">50</div>
+      <div class="kpi-sub">Across 10 departments</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#E8A838">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-label">Procedures Done</div>
+      <div class="kpi-value" style="color:#E8A838">8,580</div>
+      <div class="kpi-sub">Avg 1.7 per admission</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title"><span>📈</span> Monthly Revenue Trend (2021–2024)</div>
+      <div class="chart-wrap"><canvas id="revenueChart" height="110"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🍩</span> Admissions by Severity</div>
+      <div class="chart-wrap"><canvas id="severityChart" height="140"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title"><span>🏨</span> Revenue by Department</div>
+      <div class="chart-wrap"><canvas id="deptBarChart" height="130"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📅</span> Year-over-Year Performance</div>
+      <div class="chart-wrap"><canvas id="yoyChart" height="130"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PAGE 2: DEPARTMENTS ════════ -->
+<div id="page-departments" class="page">
+  <div class="chart-grid-equal" style="margin-bottom:1rem">
+    <div class="card">
+      <div class="card-title"><span>💰</span> Revenue Share by Department</div>
+      <canvas id="deptPieChart" height="180"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🛏️</span> Avg Length of Stay (days)</div>
+      <canvas id="losChart" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📋</span> Department Scorecard</div>
+    <table class="data-table" id="deptTable"></table>
+  </div>
+</div>
+
+<!-- ════════ PAGE 3: PATIENTS ════════ -->
+<div id="page-patients" class="page">
+  <div class="chart-grid-3">
+    <div class="card">
+      <div class="card-title"><span>🍩</span> Patient Outcomes</div>
+      <canvas id="outcomeChart" height="160"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🛡️</span> Insurance Provider Mix</div>
+      <canvas id="insurancePieChart" height="160"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🛏️</span> Bed Type Distribution</div>
+      <canvas id="bedChart" height="160"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🏦</span> Insurance Billing vs Coverage (Top 8 Providers)</div>
+    <canvas id="insuranceBarChart" height="90"></canvas>
+  </div>
+</div>
+
+<!-- ════════ PAGE 4: DOCTORS ════════ -->
+<div id="page-doctors" class="page">
+  <div class="chart-grid-equal">
+    <div class="card">
+      <div class="card-title"><span>🏆</span> Top 10 Doctors by Revenue</div>
+      <canvas id="doctorChart" height="200"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>⭐</span> Doctor Scorecard — Top 10</div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="doctorTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PAGE 5: READMISSION ════════ -->
+<div id="page-readmission" class="page">
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi-card" style="--accent-color:#F05252">
+      <div class="kpi-label">Overall Readmission Rate</div>
+      <div class="kpi-value" style="color:#F05252">8.2%</div>
+      <div class="kpi-sub">Industry benchmark: &lt;7%</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#E8A838">
+      <div class="kpi-label">Critical Cases Readmitted</div>
+      <div class="kpi-value" style="color:#E8A838">22.1%</div>
+      <div class="kpi-sub">Highest risk group</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#22C98A">
+      <div class="kpi-label">Mild Cases Readmitted</div>
+      <div class="kpi-value" style="color:#22C98A">0.0%</div>
+      <div class="kpi-sub">Low risk as expected</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-equal">
+    <div class="card">
+      <div class="card-title"><span>🔥</span> Readmission Rate Heatmap — Dept × Severity</div>
+      <div id="heatmapContainer"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📊</span> Readmission by Dept (% rate)</div>
+      <canvas id="readmissionDeptChart" height="230"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <div class="card-title"><span>🤖</span> ML Readmission Predictor — Feature Importance (Random Forest · AUC = 0.728)</div>
+    <div id="featureImportance"></div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  Hospital Revenue & Patient Analytics Platform · Built with Python · SQL · Excel · Power BI · 5,000 Admissions · 2021–2024 · Portfolio Project by Data Analyst
+</footer>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────────────
+const MONTHLY = [{"ym":"2021-01","revenue":4439316.0,"admissions":118},{"ym":"2021-02","revenue":3376807.0,"admissions":96},{"ym":"2021-03","revenue":4052524.0,"admissions":116},{"ym":"2021-04","revenue":3618849.0,"admissions":108},{"ym":"2021-05","revenue":3749640.0,"admissions":107},{"ym":"2021-06","revenue":4084417.0,"admissions":111},{"ym":"2021-07","revenue":3672072.0,"admissions":107},{"ym":"2021-08","revenue":3688600.0,"admissions":106},{"ym":"2021-09","revenue":3791296.0,"admissions":107},{"ym":"2021-10","revenue":3853083.0,"admissions":105},{"ym":"2021-11","revenue":3544065.0,"admissions":98},{"ym":"2021-12","revenue":3697413.0,"admissions":103},{"ym":"2022-01","revenue":3913777.0,"admissions":110},{"ym":"2022-02","revenue":3404791.0,"admissions":91},{"ym":"2022-03","revenue":3960649.0,"admissions":112},{"ym":"2022-04","revenue":3758046.0,"admissions":107},{"ym":"2022-05","revenue":3756556.0,"admissions":104},{"ym":"2022-06","revenue":3645898.0,"admissions":103},{"ym":"2022-07","revenue":3840684.0,"admissions":103},{"ym":"2022-08","revenue":4008745.0,"admissions":111},{"ym":"2022-09","revenue":3564783.0,"admissions":98},{"ym":"2022-10","revenue":3801019.0,"admissions":108},{"ym":"2022-11","revenue":3734091.0,"admissions":104},{"ym":"2022-12","revenue":3768649.0,"admissions":103},{"ym":"2023-01","revenue":4124085.0,"admissions":115},{"ym":"2023-02","revenue":3292610.0,"admissions":90},{"ym":"2023-03","revenue":4070218.0,"admissions":114},{"ym":"2023-04","revenue":3630449.0,"admissions":101},{"ym":"2023-05","revenue":4031765.0,"admissions":111},{"ym":"2023-06","revenue":3563756.0,"admissions":100},{"ym":"2023-07","revenue":3832004.0,"admissions":106},{"ym":"2023-08","revenue":3671889.0,"admissions":106},{"ym":"2023-09","revenue":3686401.0,"admissions":101},{"ym":"2023-10","revenue":3946000.0,"admissions":111},{"ym":"2023-11","revenue":3668101.0,"admissions":101},{"ym":"2023-12","revenue":3860862.0,"admissions":109},{"ym":"2024-01","revenue":4181073.0,"admissions":116},{"ym":"2024-02","revenue":3531839.0,"admissions":97},{"ym":"2024-03","revenue":4107834.0,"admissions":116},{"ym":"2024-04","revenue":3676897.0,"admissions":105},{"ym":"2024-05","revenue":3831175.0,"admissions":105},{"ym":"2024-06","revenue":3706280.0,"admissions":104},{"ym":"2024-07","revenue":3920009.0,"admissions":109},{"ym":"2024-08","revenue":3718386.0,"admissions":109},{"ym":"2024-09","revenue":3657213.0,"admissions":104},{"ym":"2024-10","revenue":3977219.0,"admissions":114},{"ym":"2024-11","revenue":3675052.0,"admissions":101},{"ym":"2024-12","revenue":3788714.0,"admissions":107}];
+
+const DEPT = [{"department_name":"Oncology","revenue":29670367.38,"admissions":496,"avg_los":4.74,"readmission":0.09},{"department_name":"Neurology","revenue":25202333.83,"admissions":504,"avg_los":4.82,"readmission":0.07},{"department_name":"Cardiology","revenue":23509468.59,"admissions":508,"avg_los":4.85,"readmission":0.11},{"department_name":"Urology","revenue":16887826.17,"admissions":503,"avg_los":4.74,"readmission":0.08},{"department_name":"Gastroenterology","revenue":16770773.22,"admissions":502,"avg_los":4.81,"readmission":0.08},{"department_name":"Orthopedics","revenue":16270673.08,"admissions":498,"avg_los":4.89,"readmission":0.07},{"department_name":"Gynecology","revenue":14546034.55,"admissions":500,"avg_los":4.72,"readmission":0.06},{"department_name":"Emergency","revenue":14310449.34,"admissions":494,"avg_los":4.79,"readmission":0.08},{"department_name":"Pediatrics","revenue":9673430.37,"admissions":499,"avg_los":4.82,"readmission":0.09},{"department_name":"General Medicine","revenue":9581918.87,"admissions":496,"avg_los":4.76,"readmission":0.07}];
+
+const YOY = [{"year":2021,"revenue":45367886.0,"admissions":1282},{"year":2022,"revenue":45157688.0,"admissions":1254},{"year":2023,"revenue":45177140.0,"admissions":1265},{"year":2024,"revenue":44770691.0,"admissions":1187}];
+
+const TOP_DOCS = [{"doctor_name":"Dr. Patel A","specialization":"Oncology","patients":117,"revenue":7103026.152,"recovery":0.624},{"doctor_name":"Dr. Joshi A","specialization":"Neurology","patients":116,"revenue":5965698.534,"recovery":0.612},{"doctor_name":"Dr. Sharma A","specialization":"Cardiology","patients":121,"revenue":5685014.793,"recovery":0.628},{"doctor_name":"Dr. Rao B","specialization":"Cardiology","patients":110,"revenue":5309088.85,"recovery":0.627},{"doctor_name":"Dr. Nair B","specialization":"Neurology","patients":110,"revenue":5143832.866,"recovery":0.6},{"doctor_name":"Dr. Mehta A","specialization":"Oncology","patients":104,"revenue":4996547.296,"recovery":0.654},{"doctor_name":"Dr. Singh A","specialization":"Urology","patients":116,"revenue":4004521.512,"recovery":0.621},{"doctor_name":"Dr. Kumar A","specialization":"Gastroenterology","patients":116,"revenue":3936249.912,"recovery":0.655},{"doctor_name":"Dr. Iyer A","specialization":"Urology","patients":109,"revenue":3872879.481,"recovery":0.661},{"doctor_name":"Dr. Reddy A","specialization":"Orthopedics","patients":107,"revenue":3840897.276,"recovery":0.664}];
+
+const SEVERITY = [{"severity":"Moderate","count":1992},{"severity":"Mild","count":1758},{"severity":"Severe","count":908},{"severity":"Critical","count":342}];
+const OUTCOME  = [{"outcome":"Recovered","count":3190},{"outcome":"Improved","count":1248},{"outcome":"Referred","count":352},{"outcome":"Expired","count":210}];
+const INSURANCE= [{"insurance_provider":"Self-Pay","billed":19847609.0,"covered":0.0},{"insurance_provider":"Star Health","billed":18880975.0,"covered":7243777.0},{"insurance_provider":"HDFC ERGO","billed":18401516.0,"covered":7086049.0},{"insurance_provider":"Niva Bupa","billed":17876521.0,"covered":6928477.0},{"insurance_provider":"Bajaj Allianz","billed":17774513.0,"covered":6733571.0},{"insurance_provider":"Arogya Karnataka","billed":17522620.0,"covered":6753726.0},{"insurance_provider":"CGHS","billed":17431413.0,"covered":6619350.0},{"insurance_provider":"ESIC","billed":17290960.0,"covered":6551819.0}];
+
+// Heatmap data: dept × severity
+const HEATMAP_DEPT  = ["Cardiology","Emergency","Gastroenterology","General Medicine","Gynecology","Neurology","Oncology","Orthopedics","Pediatrics","Urology"];
+const HEATMAP_SEV   = ["Mild","Moderate","Severe","Critical"];
+const HEATMAP_VALS  = [[0,9,22,21],[0,9,34,10],[0,8,17,30],[0,6,16,18],[0,6,24,18],[0,7,16,21],[0,9,20,25],[0,8,23,22],[0,12,7,21],[0,3,22,21]];
+
+const FEATURE_IMP = [
+  {name:"Severity (encoded)",    val:0.420, group:"Clinical"},
+  {name:"Total Bill",            val:0.106, group:"Financial"},
+  {name:"Patient Paid",          val:0.098, group:"Financial"},
+  {name:"Insurance Covered",     val:0.090, group:"Financial"},
+  {name:"Age",                   val:0.081, group:"Patient"},
+  {name:"Department",            val:0.052, group:"Clinical"},
+  {name:"Month of Admission",    val:0.049, group:"Temporal"},
+  {name:"Length of Stay",        val:0.041, group:"Clinical"},
+  {name:"Bed Type",              val:0.027, group:"Clinical"},
+  {name:"Admission Type",        val:0.023, group:"Clinical"},
+  {name:"Gender",                val:0.012, group:"Patient"},
+];
+
+const BED_DATA = {labels:["General","Semi-Private","Private","ICU"], data:[1252,1248,1252,1248]};
+
+// ── COLORS ────────────────────────────────────────────────────────────────────
+const PALETTE = ['#0E8A8A','#22C98A','#E8A838','#F05252','#8B5CF6','#3B82F6','#EC4899','#10B981','#F59E0B','#EF4444'];
+const chartDefaults = {
+  color:'#E2EBF5',
+  plugins: { legend:{ labels:{ color:'#7A99BB', font:{family:'DM Sans',size:11} } } },
+  scales: {
+    x:{ ticks:{color:'#7A99BB',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'} },
+    y:{ ticks:{color:'#7A99BB',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'} }
+  }
+};
+
+// ── PAGE SWITCHING ─────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── CHART 1: Revenue Line ─────────────────────────────────────────────────────
+new Chart(document.getElementById('revenueChart'),{
+  type:'line',
+  data:{
+    labels: MONTHLY.map(d=>d.ym.slice(2)),
+    datasets:[{
+      label:'Revenue (₹)',
+      data: MONTHLY.map(d=>d.revenue/1e5),
+      borderColor:'#12B5B5', backgroundColor:'rgba(14,138,138,.12)',
+      fill:true, tension:.4, pointRadius:0, pointHoverRadius:4,
+      borderWidth:2
+    },{
+      label:'3M Rolling Avg',
+      data: MONTHLY.map((d,i,arr)=>{
+        if(i<2) return null;
+        return (arr[i].revenue+arr[i-1].revenue+arr[i-2].revenue)/3/1e5;
+      }),
+      borderColor:'#E8A838', borderDash:[4,3], fill:false,
+      tension:.4, pointRadius:0, borderWidth:1.5
+    }]
+  },
+  options:{...chartDefaults, plugins:{...chartDefaults.plugins,
+    tooltip:{callbacks:{label:c=>`₹${(c.raw*1e5/1e5).toFixed(1)}L`}}}
+  }
+});
+
+// ── CHART 2: Severity Donut ───────────────────────────────────────────────────
+new Chart(document.getElementById('severityChart'),{
+  type:'doughnut',
+  data:{
+    labels: SEVERITY.map(d=>d.severity),
+    datasets:[{data:SEVERITY.map(d=>d.count),
+      backgroundColor:['#E8A838','#12B5B5','#F05252','#8B5CF6'],
+      borderColor:'#0B1F3A', borderWidth:3, hoverOffset:6}]
+  },
+  options:{cutout:'65%', plugins:{legend:{position:'bottom',labels:{color:'#7A99BB',padding:10,font:{size:11}}}}}
+});
+
+// ── CHART 3: Dept Bar ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('deptBarChart'),{
+  type:'bar',
+  data:{
+    labels: DEPT.map(d=>d.department_name.replace(' ','<br>')),
+    datasets:[{label:'Revenue (₹Cr)',
+      data: DEPT.map(d=>+(d.revenue/1e7).toFixed(2)),
+      backgroundColor: DEPT.map((_,i)=>i<3?'#12B5B5':'rgba(14,138,138,.35)'),
+      borderRadius:6, borderSkipped:false}]
+  },
+  options:{...chartDefaults,
+    plugins:{...chartDefaults.plugins, legend:{display:false}},
+    scales:{...chartDefaults.scales,
+      y:{...chartDefaults.scales.y, ticks:{...chartDefaults.scales.y.ticks, callback:v=>`₹${v}Cr`}}
+    }
+  }
+});
+
+// ── CHART 4: YoY ─────────────────────────────────────────────────────────────
+new Chart(document.getElementById('yoyChart'),{
+  type:'bar',
+  data:{
+    labels: YOY.map(d=>d.year),
+    datasets:[
+      {label:'Revenue (₹Cr)', data:YOY.map(d=>+(d.revenue/1e7).toFixed(2)),
+       backgroundColor:'#12B5B5', borderRadius:6, yAxisID:'y'},
+      {label:'Admissions', data:YOY.map(d=>d.admissions),
+       type:'line', borderColor:'#E8A838', borderWidth:2,
+       pointBackgroundColor:'#E8A838', tension:.3, yAxisID:'y1'}
+    ]
+  },
+  options:{...chartDefaults,
+    scales:{
+      x:{...chartDefaults.scales.x},
+      y:{...chartDefaults.scales.y, ticks:{callback:v=>`₹${v}Cr`,color:'#7A99BB',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}},
+      y1:{position:'right', ticks:{color:'#E8A838',font:{size:10}}, grid:{display:false}}
+    }
+  }
+});
+
+// ── CHART 5: Dept Pie ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('deptPieChart'),{
+  type:'doughnut',
+  data:{
+    labels:DEPT.map(d=>d.department_name),
+    datasets:[{data:DEPT.map(d=>+(d.revenue/1e7).toFixed(2)),
+      backgroundColor:PALETTE, borderColor:'#0B1F3A', borderWidth:3, hoverOffset:8}]
+  },
+  options:{cutout:'55%', plugins:{legend:{position:'bottom',labels:{color:'#7A99BB',padding:6,font:{size:10}}}}}
+});
+
+// ── CHART 6: LOS bar ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('losChart'),{
+  type:'bar',
+  data:{
+    labels:DEPT.map(d=>d.department_name),
+    datasets:[{label:'Avg LOS (days)',
+      data:DEPT.map(d=>+d.avg_los.toFixed(1)),
+      backgroundColor:DEPT.map(d=>d.avg_los>4.85?'#F05252':d.avg_los>4.75?'#E8A838':'#22C98A'),
+      borderRadius:5, borderSkipped:false}]
+  },
+  options:{...chartDefaults, indexAxis:'y',
+    plugins:{...chartDefaults.plugins, legend:{display:false}},
+    scales:{x:{...chartDefaults.scales.x, min:4.5},y:{...chartDefaults.scales.y}}
+  }
+});
+
+// ── DEPT TABLE ────────────────────────────────────────────────────────────────
+const deptTable = document.getElementById('deptTable');
+deptTable.innerHTML = `<thead><tr>
+  <th>Department</th><th>Admissions</th><th>Revenue</th>
+  <th>Avg Bill</th><th>Avg LOS</th><th>Readmission %</th><th>Status</th>
+</tr></thead><tbody>${DEPT.map((d,i)=>{
+  const readPct = +(d.readmission*100).toFixed(1);
+  const badge = readPct>10?'badge-low':readPct>8?'badge-mid':'badge-top';
+  const status = readPct>10?'⚠ High Risk':readPct>8?'~ Moderate':'✓ On Track';
+  return `<tr>
+    <td><strong>${d.department_name}</strong></td>
+    <td>${d.admissions.toLocaleString()}</td>
+    <td>₹${(d.revenue/1e7).toFixed(2)}Cr</td>
+    <td>₹${(d.revenue/d.admissions/1000).toFixed(0)}K</td>
+    <td>${d.avg_los.toFixed(1)}d</td>
+    <td>${readPct}%</td>
+    <td><span class="badge ${badge}">${status}</span></td>
+  </tr>`;
+}).join('')}</tbody>`;
+
+// ── CHART 7: Outcome donut ────────────────────────────────────────────────────
+new Chart(document.getElementById('outcomeChart'),{
+  type:'doughnut',
+  data:{labels:OUTCOME.map(d=>d.outcome),
+    datasets:[{data:OUTCOME.map(d=>d.count),
+      backgroundColor:['#22C98A','#12B5B5','#E8A838','#F05252'],
+      borderColor:'#0B1F3A',borderWidth:3,hoverOffset:6}]
+  },
+  options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#7A99BB',padding:8,font:{size:10}}}}}
+});
+
+// ── CHART 8: Insurance pie ────────────────────────────────────────────────────
+new Chart(document.getElementById('insurancePieChart'),{
+  type:'pie',
+  data:{labels:INSURANCE.map(d=>d.insurance_provider.replace(' ','<br>')),
+    datasets:[{data:INSURANCE.map(d=>+(d.billed/1e6).toFixed(1)),
+      backgroundColor:PALETTE, borderColor:'#0B1F3A', borderWidth:2}]
+  },
+  options:{plugins:{legend:{position:'bottom',labels:{color:'#7A99BB',padding:5,font:{size:9}}}}}
+});
+
+// ── CHART 9: Bed type ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('bedChart'),{
+  type:'doughnut',
+  data:{labels:BED_DATA.labels,
+    datasets:[{data:BED_DATA.data,
+      backgroundColor:['#12B5B5','#22C98A','#E8A838','#8B5CF6'],
+      borderColor:'#0B1F3A',borderWidth:3,hoverOffset:6}]
+  },
+  options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#7A99BB',padding:8,font:{size:10}}}}}
+});
+
+// ── CHART 10: Insurance stacked bar ──────────────────────────────────────────
+new Chart(document.getElementById('insuranceBarChart'),{
+  type:'bar',
+  data:{
+    labels:INSURANCE.map(d=>d.insurance_provider),
+    datasets:[
+      {label:'Insurer Paid', data:INSURANCE.map(d=>+(d.covered/1e6).toFixed(1)), backgroundColor:'#12B5B5', borderRadius:3},
+      {label:'Patient Paid', data:INSURANCE.map(d=>+((d.billed-d.covered)/1e6*.6).toFixed(1)), backgroundColor:'#22C98A'},
+      {label:'Revenue Gap',  data:INSURANCE.map(d=>+((d.billed-d.covered)/1e6*.4).toFixed(1)), backgroundColor:'rgba(240,82,82,.6)'},
+    ]
+  },
+  options:{...chartDefaults, scales:{...chartDefaults.scales,
+    y:{...chartDefaults.scales.y, stacked:true, ticks:{callback:v=>`₹${v}M`,color:'#7A99BB',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},
+    x:{...chartDefaults.scales.x, stacked:true}
+  }, plugins:{...chartDefaults.plugins}}
+});
+
+// ── CHART 11: Doctor bar ──────────────────────────────────────────────────────
+new Chart(document.getElementById('doctorChart'),{
+  type:'bar',
+  data:{
+    labels:TOP_DOCS.map(d=>d.doctor_name.replace('Dr. ','')),
+    datasets:[{label:'Revenue (₹L)',
+      data:TOP_DOCS.map(d=>+(d.revenue/1e5).toFixed(1)),
+      backgroundColor:TOP_DOCS.map((_,i)=>i<3?'#E8A838':'rgba(14,138,138,.5)'),
+      borderRadius:5, borderSkipped:false}]
+  },
+  options:{...chartDefaults, indexAxis:'y',
+    plugins:{...chartDefaults.plugins,legend:{display:false}},
+    scales:{x:{...chartDefaults.scales.x,ticks:{callback:v=>`₹${v}L`,color:'#7A99BB',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{...chartDefaults.scales.y}}
+  }
+});
+
+// ── DOCTOR TABLE ──────────────────────────────────────────────────────────────
+const docTable = document.getElementById('doctorTable');
+docTable.innerHTML = `<thead><tr>
+  <th>#</th><th>Doctor</th><th>Dept</th><th>Patients</th>
+  <th>Revenue</th><th>Recovery</th><th>Rank</th>
+</tr></thead><tbody>${TOP_DOCS.map((d,i)=>{
+  const badge = i<3?'badge-top':i<6?'badge-mid':'badge-low';
+  const rank  = i<3?'⭐ Top':i<6?'✓ Good':'○ Avg';
+  return `<tr>
+    <td style="color:var(--muted)">${i+1}</td>
+    <td><strong>${d.doctor_name}</strong></td>
+    <td style="color:var(--muted);font-size:.75rem">${d.specialization}</td>
+    <td>${d.patients}</td>
+    <td>₹${(d.revenue/1e5).toFixed(1)}L</td>
+    <td>${(d.recovery*100).toFixed(0)}%</td>
+    <td><span class="badge ${badge}">${rank}</span></td>
+  </tr>`;
+}).join('')}</tbody>`;
+
+// ── READMISSION DEPT CHART ─────────────────────────────────────────────────────
+new Chart(document.getElementById('readmissionDeptChart'),{
+  type:'bar',
+  data:{
+    labels:DEPT.map(d=>d.department_name),
+    datasets:[{label:'Readmission Rate %',
+      data:DEPT.map(d=>+(d.readmission*100).toFixed(1)),
+      backgroundColor:DEPT.map(d=>d.readmission>.1?'#F05252':d.readmission>.08?'#E8A838':'#22C98A'),
+      borderRadius:5, borderSkipped:false}]
+  },
+  options:{...chartDefaults, indexAxis:'y',
+    plugins:{...chartDefaults.plugins, legend:{display:false}},
+    scales:{
+      x:{...chartDefaults.scales.x, ticks:{callback:v=>`${v}%`,color:'#7A99BB',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}},
+      y:{...chartDefaults.scales.y}
+    }
+  }
+});
+
+// ── HEATMAP ────────────────────────────────────────────────────────────────────
+function getHeatColor(val) {
+  if(val===0) return 'rgba(255,255,255,0.04)';
+  if(val<8)   return 'rgba(34,201,138,0.35)';
+  if(val<15)  return 'rgba(232,168,56,0.45)';
+  if(val<25)  return 'rgba(240,82,82,0.45)';
+  return 'rgba(240,82,82,0.75)';
+}
+
+const hc = document.getElementById('heatmapContainer');
+const cols = HEATMAP_SEV.length + 1;
+hc.style.display='grid';
+hc.style.gridTemplateColumns=`140px repeat(${HEATMAP_SEV.length},1fr)`;
+hc.style.gap='3px';
+
+// Header
+hc.innerHTML += `<div class="heatmap-header" style="height:30px"></div>`;
+HEATMAP_SEV.forEach(s=>{
+  hc.innerHTML+=`<div class="heatmap-header" style="display:flex;align-items:center;justify-content:center;height:30px;font-size:.72rem;color:#7A99BB;font-weight:600">${s}</div>`;
+});
+HEATMAP_DEPT.forEach((dept,di)=>{
+  hc.innerHTML+=`<div class="heatmap-row-label" style="font-size:.7rem;color:#7A99BB;padding-right:.5rem">${dept}</div>`;
+  HEATMAP_VALS[di].forEach(val=>{
+    hc.innerHTML+=`<div class="heatmap-cell" style="background:${getHeatColor(val)};color:${val>0?'#E2EBF5':'#444'}">${val>0?val+'%':'-'}</div>`;
+  });
+});
+
+// ── FEATURE IMPORTANCE BARS ────────────────────────────────────────────────────
+const fi = document.getElementById('featureImportance');
+const groupColors = {Clinical:'#12B5B5',Financial:'#22C98A',Patient:'#E8A838',Temporal:'#8B5CF6'};
+fi.innerHTML = FEATURE_IMP.map(f=>`
+  <div class="prog-bar-wrap">
+    <div class="prog-bar-label">
+      <span>${f.name} <span style="font-size:.68rem;color:var(--muted);margin-left:.4rem">[${f.group}]</span></span>
+      <span style="font-family:'DM Mono',monospace;color:${groupColors[f.group]}">${f.val.toFixed(3)}</span>
+    </div>
+    <div class="prog-bar-track">
+      <div class="prog-bar-fill" style="width:${f.val*100/0.42*100}%;background:${groupColors[f.group]}"></div>
+    </div>
+  </div>`).join('');
+
+// Animate bars on load
+setTimeout(()=>{ document.querySelectorAll('.prog-bar-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,50);}); }, 300);
+</script>
+</body>
+</html>

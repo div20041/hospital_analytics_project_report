@@ -1,0 +1,51 @@
+doctor_name,specialization,experience_years,n_patients,actual_readmit_rate,expected_readmit_rate,attribution_score_norm,complexity_score,recovery_rate,revenue_generated,quadrant,rank_shift
+Dr. Iyer E,Cardiology,4,117,0.051,0.113,-76.1,76.8,0.692,4811361.0,⭐ Hidden Star,4.0
+Dr. Iyer C,Gastroenterology,22,97,0.041,0.094,-65.0,51.5,0.577,3963395.0,⭐ Hidden Star,-1.0
+Dr. Singh D,Neurology,23,86,0.047,0.078,-39.6,31.4,0.605,4219213.0,⭐ Hidden Star,0.0
+Dr. Singh E,Emergency,5,101,0.069,0.098,-35.1,56.8,0.624,3164912.0,⭐ Hidden Star,15.0
+Dr. Kumar B,Gynecology,23,105,0.057,0.085,-34.7,40.3,0.657,2940531.0,⭐ Hidden Star,6.0
+Dr. Reddy A,General Medicine,4,100,0.06,0.086,-32.4,41.6,0.68,1898076.0,⭐ Hidden Star,6.0
+Dr. Joshi A,Neurology,11,92,0.043,0.07,-32.4,19.7,0.696,4556947.0,✅ Solid,-4.0
+Dr. Singh B,Cardiology,10,110,0.091,0.115,-30.0,80.0,0.618,4383468.0,⚠️  Overloaded,26.0
+Dr. Mehta D,Gastroenterology,11,95,0.074,0.097,-29.2,56.4,0.653,3255281.0,⭐ Hidden Star,12.0
+Dr. Nair E,General Medicine,8,101,0.059,0.081,-26.5,34.5,0.703,1603946.0,⭐ Hidden Star,2.0
+Dr. Kumar C,General Medicine,6,108,0.065,0.085,-25.3,40.4,0.667,1931750.0,⭐ Hidden Star,4.0
+Dr. Patel C,Oncology,9,93,0.054,0.072,-22.1,22.4,0.645,5724505.0,✅ Solid,-4.0
+Dr. Reddy D,Oncology,5,93,0.054,0.071,-21.8,22.0,0.613,5514566.0,✅ Solid,-6.0
+Dr. Patel A,Gastroenterology,24,109,0.073,0.091,-21.8,48.0,0.633,3762614.0,⭐ Hidden Star,6.0
+Dr. Joshi A,Gynecology,25,104,0.067,0.083,-19.2,37.2,0.606,2919500.0,⭐ Hidden Star,3.0
+Dr. Singh D,General Medicine,17,109,0.064,0.079,-18.0,31.8,0.505,2212892.0,⭐ Hidden Star,-2.0
+Dr. Iyer A,Emergency,11,114,0.096,0.11,-16.6,73.0,0.667,3063738.0,⚠️  Overloaded,20.0
+Dr. Mehta D,Cardiology,5,109,0.092,0.105,-16.6,66.8,0.633,4844406.0,⚠️  Overloaded,18.0
+Dr. Nair A,Pediatrics,9,83,0.048,0.058,-12.0,4.2,0.627,1831383.0,✅ Solid,-15.0
+Dr. Rao B,Neurology,20,123,0.065,0.075,-11.8,26.3,0.675,5495931.0,✅ Solid,-4.0
+Dr. Patel C,Cardiology,6,99,0.121,0.13,-11.1,100.0,0.616,3939767.0,⚠️  Overloaded,26.0
+Dr. Nair C,Emergency,4,91,0.11,0.118,-9.8,83.6,0.703,2511468.0,⚠️  Overloaded,20.0
+Dr. Singh B,Pediatrics,25,91,0.055,0.061,-8.0,8.8,0.802,1800746.0,✅ Solid,-14.0
+Dr. Kumar B,General Medicine,12,100,0.09,0.096,-6.9,54.1,0.66,1986519.0,⚠️  Overloaded,9.0
+Dr. Patel D,Gynecology,11,110,0.082,0.086,-5.0,41.3,0.564,3369743.0,⚠️  Overloaded,5.0
+Dr. Mehta D,Orthopedics,16,112,0.054,0.057,-3.6,2.3,0.643,3264546.0,✅ Solid,-20.0
+Dr. Singh A,Urology,21,107,0.056,0.059,-3.2,5.1,0.673,3491069.0,✅ Solid,-17.0
+Dr. Iyer C,Neurology,5,95,0.074,0.076,-3.1,28.5,0.642,5167619.0,✅ Solid,-6.0
+Dr. Sharma D,Emergency,13,105,0.105,0.107,-2.7,69.2,0.638,2851242.0,⚠️  Overloaded,11.0
+Dr. Mehta B,Orthopedics,22,122,0.066,0.066,-0.0,14.4,0.631,3903392.0,✅ Solid,-13.0
+Dr. Reddy A,Cardiology,3,112,0.116,0.105,14.2,66.1,0.625,5535388.0,⚠️  Overloaded,15.0
+Dr. Kumar E,Gynecology,20,91,0.088,0.075,15.5,27.4,0.615,2700898.0,🔴 Quality Gap,0.0
+Dr. Rao E,Orthopedics,21,112,0.08,0.067,17.1,15.6,0.661,3592914.0,🔴 Quality Gap,-5.0
+Dr. Reddy E,Oncology,14,113,0.08,0.066,17.3,14.5,0.602,6522244.0,🔴 Quality Gap,-7.0
+Dr. Reddy E,Urology,7,94,0.074,0.06,17.7,7.2,0.617,3021816.0,✅ Solid,-11.0
+Dr. Nair E,Neurology,21,108,0.093,0.078,17.9,31.1,0.611,5762624.0,🔴 Quality Gap,0.0
+Dr. Kumar E,Pediatrics,8,91,0.077,0.061,19.6,8.4,0.615,2132769.0,🔴 Quality Gap,-11.0
+Dr. Joshi B,Urology,15,94,0.074,0.057,22.2,2.4,0.649,3806814.0,✅ Solid,-14.0
+Dr. Joshi B,Gastroenterology,5,88,0.114,0.095,23.5,53.0,0.614,3129038.0,⚠️  Overloaded,5.0
+Dr. Patel D,Pediatrics,20,94,0.074,0.055,24.5,0.0,0.617,2005328.0,✅ Solid,-16.0
+Dr. Kumar C,Urology,7,86,0.081,0.061,25.1,8.5,0.663,2939735.0,🔴 Quality Gap,-12.0
+Dr. Sharma E,Gastroenterology,24,86,0.128,0.106,27.0,68.1,0.64,2682963.0,⚠️  Overloaded,6.0
+Dr. Rao D,Urology,5,109,0.083,0.059,28.9,6.0,0.587,3610346.0,🔴 Quality Gap,-12.0
+Dr. Iyer C,Gynecology,23,90,0.111,0.084,33.4,39.0,0.667,2529495.0,⚠️  Overloaded,-1.0
+Dr. Iyer B,Oncology,13,99,0.101,0.071,36.6,22.1,0.606,6015097.0,🔴 Quality Gap,-7.0
+Dr. Mehta C,Orthopedics,9,87,0.103,0.062,51.5,9.5,0.655,2670430.0,🔴 Quality Gap,-7.0
+Dr. Mehta B,Emergency,10,98,0.163,0.113,61.9,77.6,0.622,2670281.0,⚠️  Overloaded,3.0
+Dr. Reddy C,Pediatrics,22,82,0.11,0.06,62.2,6.4,0.537,1938361.0,🔴 Quality Gap,-7.0
+Dr. Reddy A,Orthopedics,9,87,0.115,0.061,67.3,7.9,0.655,2828483.0,🔴 Quality Gap,-4.0
+Dr. Sharma A,Oncology,8,98,0.153,0.072,100.0,23.4,0.684,5893956.0,🔴 Quality Gap,-1.0
